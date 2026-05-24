@@ -1,0 +1,9 @@
+trip_id,transaction_date,category,origin_airport,destination_airport,distance_km,nights,amount,currency,traveler
+TR-1001,2026-04-02,flight,DEL,BOM,,0,18400,INR,Asha Rao
+TR-1002,2026-04-05,hotel,,,,3,11250,INR,Rahul Nair
+TR-1003,2026-04-09,ground,BLR,BLR,26,0,780,INR,Ananya Shah
+TR-1004,2026-04-14,flight,DEL,JFK,,0,98500,INR,Asha Rao
+TR-1005,2026-04-15,rail,,,318,0,1450,INR,Ananya Shah
+TR-1006,2026-04-19,taxi,,,17,0,640,INR,Rahul Nair
+TR-1007,2026-04-21,flight,BLR,SIN,,0,32500,INR,Asha Rao
+TR-1008,2026-04-22,hotel,,,,0,7800,INR,Rahul Nair

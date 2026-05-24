@@ -1,0 +1,9 @@
+belnr,buchungsdatum,werk,materialbeschreibung,menge,einheit,kraftstofftyp,lieferant,purchase_category,currency
+500001,12.03.2026,1001,Diesel for backup generator,1200,L,Diesel,Indian Oil,facilities_usd,INR
+500002,13.03.2026,1001,Diesel for fleet fuel card,320,GAL,Diesel,BPCL,transport_usd,INR
+500003,15.03.2026,2002,Office equipment procurement,1800,USD,,Dell,hardware_usd,USD
+500004,18.03.2026,2002,Gasoline for site vehicles,-90,L,Gasoline,Shell,transport_usd,INR
+500005,19.03.2026,1001,Diesel for backup generator,1100,l,Diesel,Indian Oil,facilities_usd,INR
+500006,20.03.2026,2002,Procurement - laptops and monitors,24500,USD,,Lenovo,hardware_usd,USD
+500007,21.03.2026,1001,Fuel card top up,55,GAL,Gasoline,BPCL,transport_usd,INR
+500008,22.03.2026,3003,Plant maintenance service,4200,USD,,Local Vendor,services_usd,INR
