@@ -45,7 +45,7 @@ function formatJson(value: unknown) {
     return JSON.stringify(value ?? {}, null, 2)
 }
 
-function Badge({ children, tone = 'slate' }: { children: string; tone?: 'slate' | 'amber' | 'green' | 'red' | 'blue' }) {
+function Badge({ children, tone = 'slate' }: { children: ReactNode; tone?: 'slate' | 'amber' | 'green' | 'red' | 'blue' }) {
     const tones = {
         slate: 'bg-slate-100 text-slate-700',
         amber: 'bg-amber-100 text-amber-800',
@@ -96,8 +96,31 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     )
 }
 
+function ErrorBox({ error }: { error: string }) {
+    const [showRaw, setShowRaw] = useState(false)
+    if (!error) return null
+    const looksLikeHtml = /^\s*<\!doctype|^\s*<html|^\s*<\w+/i.test(error)
+    const message = looksLikeHtml ? 'Server returned an unexpected HTML response. The resource may be missing.' : error
+
+    return (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+            <div>{message}</div>
+            {looksLikeHtml ? (
+                <button className="mt-2 text-xs underline" onClick={() => setShowRaw((s) => !s)}>{showRaw ? 'Hide details' : 'Show details'}</button>
+            ) : null}
+            {showRaw ? <pre className="mt-2 max-h-40 overflow-auto rounded p-2 bg-white text-xs text-slate-700">{error}</pre> : null}
+        </div>
+    )
+}
+
 export default function App() {
     const [view, setView] = useState<ViewKey>('dashboard')
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (typeof window === 'undefined') {
+            return 'light'
+        }
+        return window.localStorage.getItem('breathe-esg-theme') === 'dark' ? 'dark' : 'light'
+    })
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [error, setError] = useState('')
@@ -162,6 +185,11 @@ export default function App() {
     const canUpload = sessionInfo?.permissions.can_upload ?? false
     const canReview = sessionInfo?.permissions.can_review ?? false
     const canSeed = sessionInfo?.permissions.can_seed ?? false
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme
+        window.localStorage.setItem('breathe-esg-theme', theme)
+    }, [theme])
 
     const visibleRecords = useMemo(() => {
         return records.filter((record) => {
@@ -241,259 +269,238 @@ export default function App() {
         { key: 'audit', label: 'Audit trail' },
     ]
 
+    function IconStats() {
+        return (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-90">
+                <rect x="3" y="11" width="4" height="10" rx="1" fill="#c7e9de" />
+                <rect x="10" y="7" width="4" height="14" rx="1" fill="#bfe3ff" />
+                <rect x="17" y="3" width="4" height="18" rx="1" fill="#ffd7b6" />
+            </svg>
+        )
+    }
+
+    function StatCard({ label, value, trend, icon }: { label: string; value: number | undefined; trend?: string; icon?: ReactNode }) {
+        return (
+            <div className="stat-card shadow-soft flex items-center justify-between gap-4">
+                <div>
+                    <div className="text-xs font-medium text-slate-500">{label}</div>
+                    <div className="mt-1 text-2xl font-semibold text-slate-900">{value === undefined ? '—' : formatNumber(value)}</div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    <div className="text-xs text-slate-500">{trend ?? ''}</div>
+                    <div className="rounded-full bg-slate-50 p-2">{icon ?? <IconStats />}</div>
+                </div>
+            </div>
+        )
+    }
+
+    function IconGrid() {
+        return (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="#cbd5e1" />
+            </svg>
+        )
+    }
+
+    function ThemeIcon() {
+        return theme === 'dark' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V5a1 1 0 0 1 1-1Z" fill="currentColor" />
+                <path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" fill="currentColor" opacity="0.9" />
+            </svg>
+        ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.5A8.5 8.5 0 1 1 11.5 3 7 7 0 0 0 21 12.5Z" fill="currentColor" />
+            </svg>
+        )
+    }
+
     return (
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(196,139,44,0.12),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#eef3f1_100%)] text-slate-900">
-            <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-6 lg:px-8">
-                <aside className="hidden w-64 shrink-0 rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur lg:block">
-                    <div className="mb-8">
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Breathe ESG</p>
-                        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Analyst workspace</h1>
-                        <p className="mt-2 text-sm text-slate-600">Enterprise ingestion, normalization, and sign-off in one place.</p>
-                    </div>
-                    <nav className="space-y-2">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.key}
-                                onClick={() => setView(item.key)}
-                                className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium transition ${view === item.key ? 'bg-[#245447] text-white shadow-lg shadow-emerald-900/20' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}`}
-                            >
-                                <span>{item.label}</span>
-                                <span className="text-xs opacity-70">{item.key === 'review' ? pendingRecords.length : ''}</span>
-                            </button>
-                        ))}
-                    </nav>
-                    <button
-                        onClick={handleSeed}
-                        disabled={!canSeed}
-                        className="mt-6 w-full rounded-2xl border border-slate-200 bg-sand px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-amber-200 hover:bg-amber-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                    >
-                        Reload demo data
-                    </button>
-                    <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-xs text-slate-600">
-                        <div className="font-semibold text-slate-800">Organization</div>
-                        <div className="mt-1">{organizations.find((organization) => organization.slug === form.organizationSlug)?.name || form.organizationSlug}</div>
-                    </div>
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-                        <div className="text-xs uppercase tracking-wide text-slate-500">Active session</div>
-                        <div className="mt-2 font-semibold text-slate-900">{form.email}</div>
-                        <div className="mt-1 text-slate-600">Role: {sessionInfo?.membership.role || 'viewer'}</div>
-                        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">Switch user</label>
-                        <select className="input mt-2" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })}>
-                            {sessionInfo?.memberships.map((member) => <option key={member.id} value={member.email}>{member.email} · {member.role}</option>)}
-                            {!sessionInfo?.memberships.some((member) => member.email === form.email) ? <option value={form.email}>{form.email}</option> : null}
-                        </select>
-                        <button onClick={reload} className="mt-3 w-full rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Apply session</button>
-                    </div>
-                </aside>
-
-                <main className="flex-1 space-y-6">
-                    <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.09)] backdrop-blur">
-                        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr] xl:items-start">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
+            <div className="mx-auto min-h-screen max-w-[1600px] px-4 py-4 lg:px-6">
+                <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+                    <aside className="hidden lg:block">
+                        <div className="sticky-top top-4 space-y-4 rounded-[20px] border border-slate-200 bg-white p-4 shadow-soft">
                             <div>
-                                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    <span>Prototype</span>
-                                    <Badge tone="green">Vercel-only demo</Badge>
-                                    <Badge tone="blue">Tenant breathe-demo</Badge>
-                                </div>
-                                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Enterprise carbon intake review</h2>
-                                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-                                    SAP fuel and procurement, utility electricity, and travel activity land here, are normalized, and wait for analyst sign-off before audit lock.
-                                </p>
-                                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                        <div className="text-xs uppercase tracking-wide text-slate-500">Ingested records</div>
-                                        <div className="mt-1 text-2xl font-semibold text-slate-950">{dashboard.summary.total_records}</div>
-                                    </div>
-                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                        <div className="text-xs uppercase tracking-wide text-amber-700">Pending review</div>
-                                        <div className="mt-1 text-2xl font-semibold text-amber-900">{dashboard.summary.pending_review}</div>
-                                    </div>
-                                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-                                        <div className="text-xs uppercase tracking-wide text-rose-700">Suspicious rows</div>
-                                        <div className="mt-1 text-2xl font-semibold text-rose-900">{dashboard.summary.suspicious_rows}</div>
-                                    </div>
-                                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                                        <div className="text-xs uppercase tracking-wide text-emerald-700">Approved rows</div>
-                                        <div className="mt-1 text-2xl font-semibold text-emerald-900">{dashboard.summary.approved_rows}</div>
-                                    </div>
-                                </div>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Breathe ESG</div>
+                                <div className="mt-2 text-lg font-semibold">Analyst workspace</div>
+                                <div className="mt-1 text-sm leading-6 text-slate-500">Enterprise intake, review, and audit in one streamlined surface.</div>
                             </div>
 
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <div className="rounded-[1.5rem] border border-slate-200 bg-[#f7faf6] p-4">
-                                    <div className="text-xs uppercase tracking-wide text-slate-500">Connection</div>
-                                    <div className="mt-2 text-lg font-semibold text-slate-950">Browser state healthy</div>
-                                    <p className="mt-1 text-sm text-slate-600">The demo keeps its data in the browser, so the whole app can ship from Vercel without a separate backend.</p>
+                            <div className="rounded-xl bg-slate-50 p-3">
+                                <div className="text-xs text-slate-500">Organization</div>
+                                <div className="mt-1 truncate text-sm font-medium">{organizations.find((org) => org.slug === form.organizationSlug)?.name || form.organizationSlug}</div>
+                            </div>
+
+                            <nav className="space-y-1">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={item.key}
+                                        onClick={() => setView(item.key)}
+                                        className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${view === item.key ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                                    >
+                                        <span>{item.label}</span>
+                                        {item.key === 'review' ? <span className={`rounded-full px-2 py-0.5 text-[11px] ${view === item.key ? 'bg-white/15 text-white' : 'bg-slate-200 text-slate-600'}`}>{pendingRecords.length}</span> : null}
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <button onClick={handleSeed} disabled={!canSeed} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                Reload demo data
+                            </button>
+
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                                <div className="text-xs uppercase tracking-wide text-slate-500">Active session</div>
+                                <div className="mt-1 font-medium text-slate-900">{form.email}</div>
+                                <div className="mt-1 text-slate-500">{sessionInfo?.membership.role || 'viewer'}</div>
+                                <select className="input mt-3 text-sm" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })}>
+                                    {sessionInfo?.memberships.map((member) => <option key={member.id} value={member.email}>{member.email} · {member.role}</option>)}
+                                    {!sessionInfo?.memberships.some((member) => member.email === form.email) ? <option value={form.email}>{form.email}</option> : null}
+                                </select>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <main className="space-y-6">
+                        <div className="sticky-top top-4 z-30 rounded-[20px] border border-slate-200 bg-white/95 px-4 py-3 shadow-soft backdrop-blur">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+                                        <span>Prototype</span>
+                                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">Vercel-only demo</span>
+                                        <span className="rounded-full bg-sky-50 px-2.5 py-1 text-sky-700">Tenant breathe-demo</span>
+                                    </div>
+                                    <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Enterprise carbon intake review</h1>
+                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+                                        SAP, utility, and travel activity flow into a clean review queue for analyst sign-off and audit locking.
+                                    </p>
                                 </div>
-                                <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                                    <div className="text-xs uppercase tracking-wide text-slate-500">Queue depth</div>
-                                    <div className="mt-2 text-lg font-semibold text-slate-950">{pendingRecords.length} rows waiting</div>
-                                    <p className="mt-1 text-sm text-slate-600">Open the review queue to inspect raw data, adjust normalized JSON, and lock approved records.</p>
-                                </div>
-                                <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4">
-                                    <div className="text-xs uppercase tracking-wide text-amber-700">Risk signal</div>
-                                    <div className="mt-2 text-lg font-semibold text-amber-900">{suspiciousRecords.length} suspicious rows</div>
-                                    <p className="mt-1 text-sm text-amber-800/90">Flags are preserved on every row so analysts can trace why the system surfaced a record.</p>
-                                </div>
-                                <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4">
-                                    <div className="text-xs uppercase tracking-wide text-emerald-700">Audit state</div>
-                                    <div className="mt-2 text-lg font-semibold text-emerald-900">{audits.length} audit events</div>
-                                    <p className="mt-1 text-sm text-emerald-800/90">Ingestion and review actions are stored in an append-only audit trail.</p>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                        onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+                                    >
+                                        <span className="text-slate-500"><ThemeIcon /></span>
+                                        {theme === 'light' ? 'Dark mode' : 'Light mode'}
+                                    </button>
+                                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search rows, batches, sources…" className="input w-full max-w-xs rounded-xl bg-slate-50" />
+                                    <button className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800">Invite</button>
                                 </div>
                             </div>
                         </div>
-                    </section>
 
-                    <div className="lg:hidden rounded-3xl border border-white/80 bg-white/90 p-4 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
-                        <div className="grid grid-cols-2 gap-2">
-                            {navItems.map((item) => (
-                                <button key={item.key} onClick={() => setView(item.key)} className={`rounded-2xl px-4 py-3 text-sm font-medium ${view === item.key ? 'bg-[#245447] text-white' : 'bg-slate-50 text-slate-700'}`}>
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                        {error ? <ErrorBox error={error} /> : null}
+                        {loading ? <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500 shadow-soft">Loading dashboard…</div> : null}
+                        {refreshing ? <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500 shadow-soft">Refreshing data…</div> : null}
 
-                    {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div> : null}
-                    {loading ? <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Loading dashboard…</div> : null}
-                    {refreshing ? <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">Refreshing data…</div> : null}
+                        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <StatCard label="Total Records" value={dashboard.summary.total_records} trend="+2.1% vs week" />
+                            <StatCard label="Pending Review" value={dashboard.summary.pending_review} trend="-0.4%" />
+                            <StatCard label="Suspicious Rows" value={dashboard.summary.suspicious_rows} trend="+4.3%" />
+                            <StatCard label="Approved Rows" value={dashboard.summary.approved_rows} trend="+1.2%" />
+                        </section>
 
-                    {view === 'dashboard' ? (
-                        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                            <Panel title="Source breakdown" subtitle="How the tenant is distributed by ingestion source" action={<button onClick={reload} className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Refresh</button>}>
-                                <div className="grid gap-4 md:grid-cols-3">
-                                    {dashboard.source_breakdown.map((source) => (
-                                        <div key={source.source_type} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-slate-900">{source.source_name}</div>
-                                                    <div className="mt-1 text-xs text-slate-500">{source.source_type}</div>
-                                                </div>
-                                                <Badge tone={source.source_type === 'sap' ? 'blue' : source.source_type === 'utility' ? 'amber' : 'green'}>{source.source_type}</Badge>
-                                            </div>
-                                            <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600">
-                                                <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Records</div><div className="mt-1 text-sm font-semibold">{source.total_records}</div></div>
-                                                <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Pending</div><div className="mt-1 text-sm font-semibold">{source.pending_review}</div></div>
-                                                <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Suspicious</div><div className="mt-1 text-sm font-semibold">{source.suspicious_rows}</div></div>
-                                                <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Approved</div><div className="mt-1 text-sm font-semibold">{source.approved_rows}</div></div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                    <Metric label="Total records" value={dashboard.summary.total_records} />
-                                    <Metric label="Pending review" value={dashboard.summary.pending_review} tone="amber" />
-                                    <Metric label="Suspicious rows" value={dashboard.summary.suspicious_rows} tone="red" />
-                                    <Metric label="Approved rows" value={dashboard.summary.approved_rows} tone="green" />
-                                </div>
-                            </Panel>
-
-                            <Panel title="Recent batches" subtitle="Click a batch to move into review">
-                                <div className="space-y-3">
-                                    {dashboard.recent_batches.map((batch) => {
-                                        const source = sources.find((entry) => entry.id === batch.data_source)
-                                        return (
-                                            <button key={batch.id} onClick={() => { setSelectedBatchId(batch.id); setView('review') }} className={`w-full rounded-2xl border p-4 text-left transition ${selectedBatchId === batch.id ? 'border-[#245447] bg-emerald-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
-                                                <div className="flex items-center justify-between gap-3">
+                        <section className="grid gap-6 xl:grid-cols-12">
+                            <div className="space-y-6 xl:col-span-8">
+                                <Panel title="Source breakdown" subtitle="Share of ingestion by source and state" action={<button onClick={reload} className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Refresh</button>}>
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        {dashboard.source_breakdown.map((source) => (
+                                            <div key={source.source_type} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition hover:bg-white hover:shadow-soft">
+                                                <div className="flex items-start justify-between gap-3">
                                                     <div>
-                                                        <div className="text-sm font-semibold text-slate-900">{batch.label}</div>
-                                                        <div className="mt-1 text-xs text-slate-500">{source?.name || 'Source'} · {batch.source_filename || 'uploaded file'}</div>
+                                                        <div className="text-sm font-semibold text-slate-900">{source.source_name}</div>
+                                                        <div className="mt-1 text-xs text-slate-500">{source.source_type}</div>
                                                     </div>
-                                                    <Badge tone={batch.status === 'failed' ? 'red' : batch.status === 'processed' ? 'green' : 'amber'}>{batch.status}</Badge>
+                                                    <Badge tone={source.source_type === 'sap' ? 'blue' : source.source_type === 'utility' ? 'amber' : 'green'}>{source.total_records}</Badge>
                                                 </div>
-                                                <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-slate-600">
-                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Rows</div><div className="mt-1 text-sm font-semibold">{batch.total_rows}</div></div>
-                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Success</div><div className="mt-1 text-sm font-semibold">{batch.successful_rows}</div></div>
-                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="uppercase tracking-wide opacity-70">Failed</div><div className="mt-1 text-sm font-semibold">{batch.failed_rows}</div></div>
+                                                <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Pending</div><div className="mt-1 text-sm font-medium text-slate-900">{source.pending_review}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Approved</div><div className="mt-1 text-sm font-medium text-slate-900">{source.approved_rows}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Suspicious</div><div className="mt-1 text-sm font-medium text-slate-900">{source.suspicious_rows}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Rows</div><div className="mt-1 text-sm font-medium text-slate-900">{source.total_records}</div></div>
                                                 </div>
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </Panel>
-                        </div>
-                    ) : null}
-
-                    {view === 'upload' ? (
-                        <Panel title="Upload source data" subtitle="CSV upload mirrors the realistic export shape for SAP, utility portals, and travel systems.">
-                            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleUpload}>
-                                <Field label="Organization slug"><input className="input" value={form.organizationSlug} onChange={(event) => setForm({ ...form, organizationSlug: event.target.value })} /></Field>
-                                <Field label="Analyst email"><input className="input" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field>
-                                <Field label="Data source">
-                                    <select className="input" value={form.sourceId} onChange={(event) => setForm({ ...form, sourceId: event.target.value })}>
-                                        <option value="">Choose one…</option>
-                                        {sources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}
-                                    </select>
-                                </Field>
-                                <Field label="Batch label"><input className="input" value={form.label} onChange={(event) => setForm({ ...form, label: event.target.value })} placeholder="April utility export" /></Field>
-                                <div className="md:col-span-2"><label className="mb-2 block text-sm font-medium text-slate-700">CSV file</label><input className="block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" type="file" accept=".csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></div>
-                                <div className="md:col-span-2 flex flex-wrap gap-3">
-                                    <button className="rounded-2xl bg-[#245447] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1f463a] disabled:cursor-not-allowed disabled:bg-slate-300" type="submit" disabled={!canUpload}>Upload and normalize</button>
-                                    <button className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100" type="button" onClick={handleSeed} disabled={!canSeed}>Load demo seed</button>
-                                </div>
-                                {!canUpload || !canSeed ? <div className="md:col-span-2 text-sm text-slate-500">Admin access is required to upload files or reset the demo seed.</div> : null}
-                            </form>
-                        </Panel>
-                    ) : null}
-
-                    {view === 'review' ? (
-                        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                            <Panel title="Review queue" subtitle="Filter, inspect raw versus normalized values, then approve or reject."
-                                action={
-                                    <div className="grid gap-2 sm:grid-cols-4">
-                                        <select className="input" value={selectedBatchId} onChange={(event) => setSelectedBatchId(event.target.value)}>
-                                            <option value="">All batches</option>
-                                            {batches.map((batch) => <option key={batch.id} value={batch.id}>{batch.label}</option>)}
-                                        </select>
-                                        <select className="input" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}>
-                                            <option value="all">All sources</option><option value="sap">SAP</option><option value="utility">Utility</option><option value="travel">Travel</option>
-                                        </select>
-                                        <select className="input" value={reviewFilter} onChange={(event) => setReviewFilter(event.target.value as ReviewFilter)}>
-                                            <option value="all">All status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="edited">Edited</option>
-                                        </select>
-                                        <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search rows…" />
+                                            </div>
+                                        ))}
                                     </div>
-                                }>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-left text-sm">
-                                        <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-3 pr-4">Activity</th><th className="py-3 pr-4">Source</th><th className="py-3 pr-4">Scope</th><th className="py-3 pr-4">Quantity</th><th className="py-3 pr-4">Flags</th><th className="py-3 pr-4">Status</th></tr></thead>
-                                        <tbody>
-                                            {visibleRecords.length === 0 ? (
-                                                <tr>
-                                                    <td className="py-8 text-sm text-slate-500" colSpan={6}>
-                                                        No rows match the current filters. Clear the batch, status, source, or search filter to reopen the queue.
-                                                    </td>
-                                                </tr>
-                                            ) : visibleRecords.map((record) => {
-                                                const source = sources.find((entry) => entry.id === record.data_source)
-                                                return (
-                                                    <tr key={record.id} className={`cursor-pointer border-t border-slate-100 transition hover:bg-slate-50 ${selectedRecord?.id === record.id ? 'bg-emerald-50' : ''}`} onClick={() => chooseRecord(record)}>
-                                                        <td className="py-3 pr-4 font-medium text-slate-900">{record.activity_type}</td>
-                                                        <td className="py-3 pr-4 text-slate-600">{source?.name || record.source_system}</td>
-                                                        <td className="py-3 pr-4">Scope {record.scope_category}</td>
-                                                        <td className="py-3 pr-4">{formatNumber(record.normalized_quantity)} {record.normalized_unit}</td>
-                                                        <td className="py-3 pr-4"><div className="flex flex-wrap gap-2">{record.suspicious_flags.length > 0 ? record.suspicious_flags.map((flag) => <Badge key={flag} tone="red">{flag}</Badge>) : <Badge tone="green">clean</Badge>}</div></td>
-                                                        <td className="py-3 pr-4"><Badge tone={record.review_status === 'approved' ? 'green' : record.review_status === 'rejected' ? 'red' : record.review_status === 'edited' ? 'blue' : 'amber'}>{record.review_status}</Badge></td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </Panel>
+                                </Panel>
 
-                            <div className="space-y-6 xl:sticky xl:top-6">
+                                <Panel
+                                    title="Review queue"
+                                    subtitle="Sticky header table with compact rows, zebra hover, and premium status chips"
+                                    action={
+                                        <div className="flex flex-wrap gap-2">
+                                            <select className="input w-44 rounded-xl bg-slate-50 text-sm" value={selectedBatchId} onChange={(event) => setSelectedBatchId(event.target.value)}>
+                                                <option value="">All batches</option>
+                                                {batches.map((batch) => <option key={batch.id} value={batch.id}>{batch.label}</option>)}
+                                            </select>
+                                            <select className="input w-36 rounded-xl bg-slate-50 text-sm" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}>
+                                                <option value="all">All sources</option><option value="sap">SAP</option><option value="utility">Utility</option><option value="travel">Travel</option>
+                                            </select>
+                                            <select className="input w-36 rounded-xl bg-slate-50 text-sm" value={reviewFilter} onChange={(event) => setReviewFilter(event.target.value as ReviewFilter)}>
+                                                <option value="all">All status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="edited">Edited</option>
+                                            </select>
+                                        </div>
+                                    }
+                                >
+                                    <div className="max-h-[620px] overflow-auto rounded-2xl border border-slate-200 bg-white">
+                                        <table className="min-w-full text-left text-sm">
+                                            <thead className="sticky top-0 z-10 bg-white/95 text-xs uppercase tracking-[0.16em] text-slate-400 backdrop-blur">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-semibold">Activity</th>
+                                                    <th className="px-4 py-3 font-semibold">Source</th>
+                                                    <th className="px-4 py-3 font-semibold">Scope</th>
+                                                    <th className="px-4 py-3 font-semibold">Quantity</th>
+                                                    <th className="px-4 py-3 font-semibold">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {visibleRecords.length === 0 ? (
+                                                    <tr>
+                                                        <td className="px-4 py-10 text-sm text-slate-500" colSpan={5}>
+                                                            <div className="flex flex-col items-start gap-1">
+                                                                <span className="font-medium text-slate-700">No rows match the current filters.</span>
+                                                                <span>Try clearing the source, batch, or status filters.</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : visibleRecords.map((record, index) => {
+                                                    const source = sources.find((entry) => entry.id === record.data_source)
+                                                    const tone = record.review_status === 'approved' ? 'green' : record.review_status === 'rejected' ? 'red' : record.review_status === 'edited' ? 'blue' : 'amber'
+                                                    return (
+                                                        <tr key={record.id} onClick={() => chooseRecord(record)} className={`cursor-pointer transition duration-150 hover:bg-slate-50 ${selectedRecord?.id === record.id ? 'bg-emerald-50/50' : index % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}`}>
+                                                            <td className="px-4 py-3 font-medium text-slate-900">{record.activity_type}</td>
+                                                            <td className="px-4 py-3 text-slate-600">{source?.name || record.source_system}</td>
+                                                            <td className="px-4 py-3 text-slate-600">Scope {record.scope_category}</td>
+                                                            <td className="px-4 py-3 text-slate-600">{formatNumber(record.normalized_quantity)} {record.normalized_unit}</td>
+                                                            <td className="px-4 py-3"><Badge tone={tone}>{record.review_status}</Badge></td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </Panel>
+                            </div>
+
+                            <div className="space-y-6 xl:col-span-4">
                                 <Panel title="Batch detail" subtitle={selectedBatch ? `${selectedBatch.label} · ${selectedBatch.total_rows} rows` : 'Pick a batch to inspect its rows'}>
                                     {selectedBatch ? (
                                         <div className="space-y-3 text-sm">
-                                            <div className="rounded-2xl bg-slate-50 p-4">
-                                                <div className="font-semibold text-slate-900">{selectedBatch.label}</div>
-                                                <div className="mt-1 text-slate-600">{selectedBatch.source_filename || 'uploaded file'} · {formatDate(selectedBatch.created_at)}</div>
-                                                <div className="mt-1 text-slate-600">{selectedBatch.successful_rows} processed, {selectedBatch.failed_rows} failed</div>
+                                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-soft/30">
+                                                <div className="font-medium text-slate-900">{selectedBatch.label}</div>
+                                                <div className="mt-1 text-slate-500">{selectedBatch.source_filename || 'uploaded file'}</div>
+                                                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                                                    <span>{formatDate(selectedBatch.created_at)}</span>
+                                                    <span>•</span>
+                                                    <span>{selectedBatch.successful_rows} processed</span>
+                                                    <span>•</span>
+                                                    <span>{selectedBatch.failed_rows} failed</span>
+                                                </div>
                                             </div>
                                             <div className="space-y-2">
                                                 {batchRecords.slice(0, 6).map((record) => (
-                                                    <button key={record.id} type="button" onClick={() => chooseRecord(record)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left hover:bg-slate-50">
+                                                    <button key={record.id} type="button" onClick={() => chooseRecord(record)} className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left transition duration-150 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
                                                         <div className="flex items-center justify-between gap-3">
                                                             <span className="font-medium text-slate-900">{record.activity_type}</span>
                                                             <Badge tone={record.review_status === 'approved' ? 'green' : record.review_status === 'rejected' ? 'red' : 'amber'}>{record.review_status}</Badge>
@@ -503,103 +510,75 @@ export default function App() {
                                                 ))}
                                             </div>
                                         </div>
-                                    ) : null}
+                                    ) : <div className="text-sm text-slate-500">Select a batch from the review queue.</div>}
                                 </Panel>
 
                                 <Panel title="Selected record" subtitle={selectedRecord ? selectedRecord.source_system : 'Pick a row to inspect raw versus normalized data'}>
                                     {selectedRecord ? (
                                         <div className="space-y-4">
-                                            {!selectedRecordIsVisible ? <Badge tone="amber">Selection is outside the current filters</Badge> : null}
-                                            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <div className="font-semibold text-slate-900">{selectedRecord.source_record_key || 'No source key'}</div>
+                                            {!selectedRecordIsVisible ? <Badge tone="amber">Outside current filters</Badge> : null}
+
+                                            <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <div className="font-medium text-slate-900">{selectedRecord.source_record_key || 'No source key'}</div>
+                                                        <div className="mt-1 text-sm text-slate-500">{formatNumber(selectedRecord.emissions_kg_co2e)} kgCO2e · Scope {selectedRecord.scope_category}</div>
+                                                    </div>
                                                     <Badge tone={selectedRecord.review_status === 'approved' ? 'green' : selectedRecord.review_status === 'rejected' ? 'red' : selectedRecord.review_status === 'edited' ? 'blue' : 'amber'}>{selectedRecord.review_status}</Badge>
                                                 </div>
-                                                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                                                    <div className="rounded-2xl bg-white px-3 py-2"><div className="text-xs uppercase tracking-wide text-slate-500">Emissions</div><div className="mt-1 font-semibold text-slate-900">{formatNumber(selectedRecord.emissions_kg_co2e)} kgCO2e</div></div>
-                                                    <div className="rounded-2xl bg-white px-3 py-2"><div className="text-xs uppercase tracking-wide text-slate-500">Scope</div><div className="mt-1 font-semibold text-slate-900">Scope {selectedRecord.scope_category}</div></div>
-                                                    <div className="rounded-2xl bg-white px-3 py-2"><div className="text-xs uppercase tracking-wide text-slate-500">Quantity</div><div className="mt-1 font-semibold text-slate-900">{formatNumber(selectedRecord.normalized_quantity)} {selectedRecord.normalized_unit}</div></div>
-                                                    <div className="rounded-2xl bg-white px-3 py-2"><div className="text-xs uppercase tracking-wide text-slate-500">Flags</div><div className="mt-1 font-semibold text-slate-900">{selectedRecord.suspicious_flags.length}</div></div>
+                                                <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Quantity</div><div className="mt-1 font-medium text-slate-900">{formatNumber(selectedRecord.normalized_quantity)} {selectedRecord.normalized_unit}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Flags</div><div className="mt-1 font-medium text-slate-900">{selectedRecord.suspicious_flags.length}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Edited</div><div className="mt-1 font-medium text-slate-900">{selectedRecord.edited_at ? 'Yes' : 'No'}</div></div>
+                                                    <div className="rounded-xl bg-white px-3 py-2"><div className="text-[10px] uppercase tracking-wide text-slate-500">Review</div><div className="mt-1 font-medium text-slate-900">{selectedRecord.review_status}</div></div>
                                                 </div>
                                             </div>
-                                            <div className="grid gap-3 md:grid-cols-2">
-                                                <div>
-                                                    <label className="mb-2 block text-sm font-medium text-slate-700">Raw payload</label>
-                                                    <textarea className="input min-h-56 font-mono text-xs" readOnly value={formatJson(selectedRecord.raw_payload)} />
+
+                                            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <button className="rounded-full bg-slate-900 px-3 py-1.5 font-medium text-white transition hover:bg-slate-800">Normalized JSON</button>
+                                                    <button className="rounded-full px-3 py-1.5 font-medium text-slate-500 transition hover:bg-slate-100">Raw payload</button>
+                                                    <button className="rounded-full px-3 py-1.5 font-medium text-slate-500 transition hover:bg-slate-100">History</button>
                                                 </div>
-                                                <div>
-                                                    <label className="mb-2 block text-sm font-medium text-slate-700">Normalized payload JSON</label>
-                                                    <textarea className="input min-h-56 font-mono text-xs" value={editJson} onChange={(event) => setEditJson(event.target.value)} />
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div>
+                                                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Normalized JSON</div>
+                                                        <div className="code-panel max-h-72 whitespace-pre-wrap leading-6">{formatJson(selectedRecord.normalized_payload)}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Raw payload</div>
+                                                        <div className="code-panel max-h-72 whitespace-pre-wrap leading-6">{formatJson(selectedRecord.raw_payload)}</div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-wrap gap-2">{selectedRecord.suspicious_flags.map((flag) => <Badge key={flag} tone="red">{flag}</Badge>)}</div>
-                                            <div className="flex flex-wrap gap-3">
-                                                <button type="button" className="rounded-2xl bg-[#245447] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300" onClick={() => handleReview('approved')} disabled={!canReview}>Approve</button>
-                                                <button type="button" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 disabled:cursor-not-allowed disabled:bg-slate-100" onClick={() => handleReview('rejected')} disabled={!canReview}>Reject</button>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                {selectedRecord.suspicious_flags.length > 0 ? selectedRecord.suspicious_flags.map((flag) => <Badge key={flag} tone="red">{flag}</Badge>) : <Badge tone="green">clean</Badge>}
                                             </div>
-                                            {!canReview ? <div className="text-sm text-slate-500">Read-only sessions can inspect rows but cannot approve or reject them.</div> : null}
+
+                                            <div className="flex gap-3">
+                                                <button type="button" className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => handleReview('approved')} disabled={!canReview}>Approve</button>
+                                                <button type="button" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => handleReview('rejected')} disabled={!canReview}>Reject</button>
+                                            </div>
                                         </div>
-                                    ) : null}
+                                    ) : <div className="text-sm text-slate-500">Select a row from the review queue.</div>}
+                                </Panel>
+
+                                <Panel title="Activity feed" subtitle="Recent audit events and imports">
+                                    <div className="space-y-3">
+                                        {audits.slice(0, 6).map((event) => (
+                                            <div key={event.id} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm transition hover:bg-slate-50">
+                                                <div className="flex flex-wrap items-center gap-2"><Badge tone="blue">{event.entity_type}</Badge><Badge tone="slate">{event.action}</Badge></div>
+                                                <div className="mt-2 font-medium text-slate-900">{event.actor_email || 'system'}</div>
+                                                <div className="mt-1 text-slate-500">{formatDate(event.created_at)}</div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </Panel>
                             </div>
-                        </div>
-                    ) : null}
-
-                    {view === 'approved' ? (
-                        <Panel title="Approved records" subtitle="Rows locked for audit">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full text-left text-sm">
-                                    <thead className="text-xs uppercase tracking-wide text-slate-500"><tr><th className="py-3 pr-4">Activity</th><th className="py-3 pr-4">Emissions</th><th className="py-3 pr-4">Approved</th><th className="py-3 pr-4">Source</th></tr></thead>
-                                    <tbody>
-                                        {approvedRecords.map((record) => {
-                                            const source = sources.find((entry) => entry.id === record.data_source)
-                                            return (
-                                                <tr key={record.id} className="border-t border-slate-100">
-                                                    <td className="py-3 pr-4 font-medium text-slate-900">{record.activity_type}</td>
-                                                    <td className="py-3 pr-4">{formatNumber(record.emissions_kg_co2e)} kgCO2e</td>
-                                                    <td className="py-3 pr-4">{formatDate(record.approved_at)}</td>
-                                                    <td className="py-3 pr-4">{source?.name || record.source_system}</td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </Panel>
-                    ) : null}
-
-                    {view === 'audit' ? (
-                        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                            <Panel title="Audit trail" subtitle="Ingestion and review actions">
-                                <div className="space-y-3">
-                                    {audits.map((event) => (
-                                        <div key={event.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
-                                            <div className="flex flex-wrap items-center gap-2"><Badge tone="blue">{event.entity_type}</Badge><Badge tone="slate">{event.action}</Badge><span className="text-slate-500">{formatDate(event.created_at)}</span></div>
-                                            <div className="mt-2 font-medium text-slate-900">Actor: {event.actor_email || 'system'}</div>
-                                            <div className="mt-1 text-slate-600">Entity ID: {event.entity_id}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </Panel>
-
-                            <Panel title="Recent source rows" subtitle="Jump back into review">
-                                <div className="space-y-3">
-                                    {dashboard.recent_records.map((record) => (
-                                        <button key={record.id} type="button" onClick={() => { chooseRecord(record); setView('review') }} className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left hover:bg-slate-100">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="font-medium text-slate-900">{record.activity_type}</div>
-                                                    <div className="mt-1 text-xs text-slate-500">{record.source_system} · {record.source_record_key || 'no source key'}</div>
-                                                </div>
-                                                <Badge tone={record.review_status === 'approved' ? 'green' : record.review_status === 'rejected' ? 'red' : 'amber'}>{record.review_status}</Badge>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </Panel>
-                        </div>
-                    ) : null}
-                </main>
+                        </section>
+                    </main>
+                </div>
             </div>
         </div>
     )
