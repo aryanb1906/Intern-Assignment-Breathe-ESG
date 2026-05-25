@@ -27,7 +27,7 @@ const defaultForm = {
     organizationSlug: 'breathe-demo',
     sourceId: '',
     label: '',
-    email: 'analyst@breathe.local',
+    email: 'admin@breathe.local',
 }
 
 function formatNumber(value: string | number | null | undefined) {
@@ -292,7 +292,7 @@ export default function App() {
                             <div>
                                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                                     <span>Prototype</span>
-                                    <Badge tone="green">Live API /api</Badge>
+                                    <Badge tone="green">Vercel-only demo</Badge>
                                     <Badge tone="blue">Tenant breathe-demo</Badge>
                                 </div>
                                 <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Enterprise carbon intake review</h2>
@@ -322,8 +322,8 @@ export default function App() {
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-[1.5rem] border border-slate-200 bg-[#f7faf6] p-4">
                                     <div className="text-xs uppercase tracking-wide text-slate-500">Connection</div>
-                                    <div className="mt-2 text-lg font-semibold text-slate-950">Backend proxy healthy</div>
-                                    <p className="mt-1 text-sm text-slate-600">Frontend calls /api locally and in production, so there is one URL contract to keep in sync.</p>
+                                    <div className="mt-2 text-lg font-semibold text-slate-950">Browser state healthy</div>
+                                    <p className="mt-1 text-sm text-slate-600">The demo keeps its data in the browser, so the whole app can ship from Vercel without a separate backend.</p>
                                 </div>
                                 <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
                                     <div className="text-xs uppercase tracking-wide text-slate-500">Queue depth</div>
