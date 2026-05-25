@@ -89,17 +89,17 @@ function highlightJson(value: unknown) {
 function Badge({ children, tone = 'slate' }: { children: ReactNode; tone?: 'slate' | 'amber' | 'green' | 'red' | 'blue' }) {
     const tones = {
         slate: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200',
-        amber: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
-        green: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
-        red: 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200',
-        blue: 'bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200',
+        amber: 'bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
+        green: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
+        red: 'bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200',
+        blue: 'bg-slate-100 text-slate-700 dark:bg-sky-500/15 dark:text-sky-200',
     }
-    return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>{children}</span>
+    return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${tones[tone]}`}>{children}</span>
 }
 
 function Panel({ title, subtitle, action, children }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode }) {
     return (
-        <section className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-soft dark:border-white/10 dark:bg-slate-950/70">
+        <section className="surface-card p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">{title}</h3>
@@ -149,14 +149,14 @@ function StatCard({ label, value, note, icon, tone = 'slate' }: { label: string;
     }
 
     return (
-        <div className={`rounded-[18px] border border-slate-200 p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-white/10 ${tones[tone]}`}>
+        <div className={`rounded-[16px] border border-slate-200 p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-white/10 ${tones[tone]}`}>
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{label}</div>
                     <div className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 dark:text-slate-50">{value === undefined ? '—' : formatNumber(value)}</div>
                     {note ? <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">{note}</div> : null}
                 </div>
-                <div className="rounded-2xl bg-white p-2 text-slate-600 shadow-sm dark:bg-slate-950/80 dark:text-slate-200">{icon}</div>
+                <div className="rounded-2xl bg-white p-2 text-slate-600 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950/80 dark:text-slate-200 dark:ring-white/10">{icon}</div>
             </div>
         </div>
     )
@@ -176,7 +176,7 @@ function MiniBarChart({ values }: { values: number[] }) {
 }
 
 function SkeletonCard() {
-    return <div className="animate-pulse rounded-[20px] border border-slate-200 bg-white p-5 shadow-soft dark:border-white/10 dark:bg-slate-950/70"><div className="h-4 w-32 rounded bg-slate-200 dark:bg-white/10" /><div className="mt-4 h-24 rounded-2xl bg-slate-100 dark:bg-white/5" /></div>
+    return <div className="animate-pulse rounded-[16px] border border-slate-200 bg-white p-5 shadow-soft dark:border-white/10 dark:bg-slate-950/70"><div className="h-4 w-32 rounded bg-slate-200 dark:bg-white/10" /><div className="mt-4 h-24 rounded-2xl bg-slate-100 dark:bg-white/5" /></div>
 }
 
 function TabPill({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
@@ -195,9 +195,9 @@ function CodeViewer({ record, audits, tab, onTabChange }: { record: NormalizedRe
     const history = audits.filter((event) => event.entity_type === 'normalized_record' && event.entity_id === record.id)
 
     return (
-        <div className="rounded-[20px] border border-slate-200 bg-slate-950 text-slate-100 shadow-soft dark:border-white/10">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
-                <div className="text-sm font-medium text-slate-200">Record inspector</div>
+        <div className="surface-card overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">Record inspector</div>
                 <div className="flex gap-2">
                     <TabPill active={tab === 'normalized'} onClick={() => onTabChange('normalized')}>Normalized JSON</TabPill>
                     <TabPill active={tab === 'raw'} onClick={() => onTabChange('raw')}>Raw payload</TabPill>
@@ -207,20 +207,20 @@ function CodeViewer({ record, audits, tab, onTabChange }: { record: NormalizedRe
             <div className="max-h-[24rem] overflow-auto p-4">
                 {tab === 'history' ? (
                     <div className="space-y-3">
-                        {history.length === 0 ? <div className="text-sm text-slate-400">No record history yet.</div> : history.map((entry) => (
-                            <div key={entry.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                        {history.length === 0 ? <div className="text-sm text-slate-500 dark:text-slate-400">No record history yet.</div> : history.map((entry) => (
+                            <div key={entry.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-white/10 dark:bg-white/5">
                                 <div className="flex items-center gap-2">
                                     <Badge tone="blue">{entry.action}</Badge>
                                     <span className="text-slate-400">{formatDate(entry.created_at)}</span>
                                 </div>
-                                <div className="mt-2 text-slate-100">{entry.actor_email || 'system'}</div>
-                                <div className="mt-1 text-slate-400">{entry.after_state ? JSON.stringify(entry.after_state) : '{}'}</div>
+                                <div className="mt-2 text-slate-900 dark:text-slate-100">{entry.actor_email || 'system'}</div>
+                                <div className="mt-1 text-slate-500 dark:text-slate-400">{entry.after_state ? JSON.stringify(entry.after_state) : '{}'}</div>
                             </div>
                         ))}
                     </div>
                 ) : (
                     <pre
-                        className="whitespace-pre-wrap break-words font-mono text-xs leading-6 text-slate-100"
+                        className="whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-slate-50 p-4 font-mono text-xs leading-6 text-slate-700 dark:border-white/10 dark:bg-slate-950 dark:text-slate-100"
                         dangerouslySetInnerHTML={{ __html: highlightJson(tab === 'raw' ? record.raw_payload : record.normalized_payload) }}
                     />
                 )}
@@ -377,7 +377,7 @@ export default function App() {
     function DesktopSidebar() {
         return (
             <aside className="hidden lg:block">
-                <div className="sticky-top top-4 rounded-[20px] border border-slate-200 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-slate-950/70">
+                <div className="sticky-top top-4 rounded-[16px] border border-slate-200 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-slate-950/70">
                     <div className="space-y-4">
                         <div>
                             <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">Breathe ESG</div>
@@ -598,7 +598,7 @@ export default function App() {
         return (
             <div className="space-y-6">
                 <Panel title="Review queue" subtitle="Filter, inspect raw versus normalized values, then approve or reject." action={<div className="flex flex-wrap gap-2"><select className="input w-44 rounded-xl bg-slate-50 text-sm" value={selectedBatchId} onChange={(event) => setSelectedBatchId(event.target.value)}><option value="">All batches</option>{batches.map((batch) => <option key={batch.id} value={batch.id}>{batch.label}</option>)}</select><select className="input w-36 rounded-xl bg-slate-50 text-sm" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}><option value="all">All sources</option><option value="sap">SAP</option><option value="utility">Utility</option><option value="travel">Travel</option></select><select className="input w-36 rounded-xl bg-slate-50 text-sm" value={reviewFilter} onChange={(event) => setReviewFilter(event.target.value as ReviewFilter)}><option value="all">All status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="edited">Edited</option></select></div>}>
-                    <div className="max-h-[680px] overflow-auto rounded-[18px] border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-950/70">
+                    <div className="max-h-[680px] overflow-auto rounded-[16px] border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-950/70">
                         <table className="min-w-full text-left text-sm">
                             <thead className="sticky top-0 z-10 bg-white/95 text-xs uppercase tracking-[0.16em] text-slate-400 backdrop-blur dark:bg-slate-950/95">
                                 <tr>
@@ -848,7 +848,7 @@ export default function App() {
         if (activeTab === 'review') return <ReviewPage />
         if (activeTab === 'approved') return (
             <Panel title="Approved records" subtitle="Rows locked for audit">
-                <div className="overflow-hidden rounded-[18px] border border-slate-200 dark:border-white/10">
+                <div className="overflow-hidden rounded-[16px] border border-slate-200 dark:border-white/10">
                     <table className="min-w-full text-left text-sm">
                         <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-400 dark:bg-white/5">
                             <tr>
@@ -893,52 +893,51 @@ export default function App() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
             <MobileDrawer />
-            <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-6">
+            <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-8 lg:py-8">
                 <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_380px]">
                     <DesktopSidebar />
 
                     <main className="min-w-0 space-y-6">
-                        <div className="rounded-[20px] border border-slate-200 bg-white/95 p-4 shadow-soft backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
-                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="surface-card p-5 sm:p-6 lg:p-8">
+                            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="flex items-start gap-3">
                                     <button type="button" className="inline-flex rounded-xl border border-slate-200 p-2 text-slate-600 lg:hidden dark:border-white/10 dark:text-slate-300" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
                                         <Menu size={18} />
                                     </button>
-                                    <div>
-                                        <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
-                                            <span>Prototype</span>
-                                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">Vercel-only demo</span>
-                                            <span className="rounded-full bg-sky-50 px-2.5 py-1 text-sky-700 dark:bg-sky-500/10 dark:text-sky-200">Tenant breathe-demo</span>
+                                    <div className="max-w-4xl">
+                                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">Vercel demo</span>
+                                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">Tenant breathe-demo</span>
+                                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">Analyst workspace</span>
                                         </div>
-                                        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 dark:text-slate-50 sm:text-4xl">Enterprise carbon intake review</h1>
-                                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">SAP, utility, and travel activity flow into a clean review queue for analyst sign-off and audit locking.</p>
+                                        <h1 className="mt-4 text-5xl font-bold tracking-tight text-slate-950 dark:text-slate-50">Enterprise carbon intake review</h1>
+                                        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500 dark:text-slate-400">SAP, utility, and travel activity flow into a clean review queue for analyst sign-off and audit locking.</p>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                    <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10" onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}>
+                                <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                                    <label className="relative w-full sm:w-[320px] lg:w-[360px]">
+                                        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records, batches, sources" className="toolbar-input w-full" />
+                                    </label>
+                                    <button type="button" className="toolbar-control inline-flex h-10 w-10 items-center justify-center text-slate-500 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50" onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))} aria-label="Toggle theme">
                                         {theme === 'light' ? <MoonStar size={16} /> : <SunMedium size={16} />}
-                                        {theme === 'light' ? 'Dark mode' : 'Light mode'}
                                     </button>
-                                    <button type="button" className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-3 text-slate-500 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10" aria-label="Notifications">
+                                    <button type="button" className="toolbar-control inline-flex h-10 w-10 items-center justify-center text-slate-500 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50" aria-label="Notifications">
                                         <Bell size={16} />
                                     </button>
-                                    <label className="relative">
-                                        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search rows, batches, sources..." className="input w-full max-w-xs rounded-xl bg-slate-50 pl-9 dark:bg-white/5" />
-                                    </label>
-                                    <button className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">Invite / Share</button>
+                                    <button className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white">Invite</button>
                                 </div>
                             </div>
                         </div>
 
                         {error ? <ErrorBox error={error} /> : null}
                         {loading ? <SkeletonCard /> : null}
-                        {refreshing ? <div className="rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-soft dark:border-white/10 dark:bg-slate-950/70">Refreshing data...</div> : null}
+                        {refreshing ? <div className="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-soft dark:border-white/10 dark:bg-slate-950/70">Refreshing data...</div> : null}
 
-                        <div className="flex flex-wrap gap-2 rounded-[18px] border border-slate-200 bg-white p-2 shadow-soft dark:border-white/10 dark:bg-slate-950/70 lg:hidden">
+                        <div className="flex flex-wrap gap-2 rounded-[16px] border border-slate-200 bg-white p-2 shadow-soft dark:border-white/10 dark:bg-slate-950/70 lg:hidden">
                             {tabs.map((tab) => (
                                 <TabPill key={tab.key} active={activeTab === tab.key} onClick={() => selectTab(tab.key)}>
                                     <span className="inline-flex items-center gap-2">{tab.icon}{tab.label}</span>
@@ -946,7 +945,7 @@ export default function App() {
                             ))}
                         </div>
 
-                        <div className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-slate-950/70 lg:hidden">
+                        <div className="rounded-[16px] border border-slate-200 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-slate-950/70 lg:hidden">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Current view</div>

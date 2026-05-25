@@ -7,25 +7,25 @@
     --muted: #64748b;
     --card-bg: #ffffff;
     --surface: #f8fafc;
-    --accent: #245447;
-    --border: rgba(15, 23, 42, 0.08);
+    --accent: #0f172a;
+    --border: #e2e8f0;
     --chip-bg: #f1f5f9;
     --chip-text: #334155;
     color: var(--text);
-    background: linear-gradient(180deg, #fbfdfc 0%, #f1f5f3 100%);
+    background: #f8fafc;
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 :root[data-theme='dark'] {
-    --text: #e5e7eb;
+    --text: #e2e8f0;
     --muted: #94a3b8;
     --card-bg: #111827;
     --surface: #0f172a;
-    --accent: #93c5fd;
+    --accent: #e2e8f0;
     --border: rgba(148, 163, 184, 0.16);
-    --chip-bg: rgba(148, 163, 184, 0.16);
-    --chip-text: #dbe4f0;
-    background: linear-gradient(180deg, #0b1120 0%, #111827 100%);
+    --chip-bg: rgba(148, 163, 184, 0.12);
+    --chip-text: #e2e8f0;
+    background: #0f172a;
 }
 
 * {
@@ -107,12 +107,12 @@ button {
 }
 
 .shadow-soft {
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .stat-card {
     border-radius: var(--card-radius);
-    padding: 1rem 1.25rem;
+    padding: 1rem;
     background: var(--card-bg);
     border: 1px solid var(--border);
 }
@@ -194,4 +194,51 @@ button {
     top: 0;
     z-index: 40;
     backdrop-filter: blur(6px);
+}
+
+.toolbar-control {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.toolbar-control:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.toolbar-control:focus-within {
+    border-color: #94a3b8;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.16);
+}
+
+.toolbar-input {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 0 0.95rem 0 2.4rem;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.toolbar-input::placeholder {
+    color: #94a3b8;
+}
+
+.toolbar-input:focus {
+    border-color: #cbd5e1;
+    box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.12);
+}
+
+.surface-card {
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
