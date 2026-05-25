@@ -17,15 +17,15 @@
 }
 
 :root[data-theme='dark'] {
-    --text: #e2e8f0;
+    --text: #e5e7eb;
     --muted: #94a3b8;
-    --card-bg: #0f172a;
-    --surface: #111827;
-    --accent: #7dd3fc;
-    --border: rgba(148, 163, 184, 0.18);
+    --card-bg: #111827;
+    --surface: #0f172a;
+    --accent: #93c5fd;
+    --border: rgba(148, 163, 184, 0.16);
     --chip-bg: rgba(148, 163, 184, 0.16);
-    --chip-text: #cbd5e1;
-    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    --chip-text: #dbe4f0;
+    background: linear-gradient(180deg, #0b1120 0%, #111827 100%);
 }
 
 * {
@@ -169,19 +169,24 @@ button {
     background-color: rgba(30, 41, 59, 0.85) !important;
 }
 
-:root[data-theme='dark'] .bg-slate-900 {
-    background-color: #e2e8f0 !important;
-    color: #020617 !important;
-}
-
 .code-panel {
     background: #0f172a;
     color: #e6eef7;
-    border-radius: 12px;
-    padding: 0.75rem;
+    border-radius: 14px;
+    padding: 1rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
     font-size: 12px;
     overflow: auto;
+}
+
+:root[data-theme='light'] .code-panel {
+    background: #0f172a;
+    color: #e6eef7;
+}
+
+:root[data-theme='dark'] .code-panel {
+    background: #0b1220;
+    color: #eef2ff;
 }
 
 .sticky-top {
